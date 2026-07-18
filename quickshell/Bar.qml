@@ -19,9 +19,10 @@ Variants {
         WlrLayershell.namespace: "quickshell:bar"
         anchors { top: true; left: true; right: true }
 
-        implicitHeight: Config.barHeight
-                      + (full ? Config.tabDropHover : 0)
-                      + Config.borderWidth * 2
+        readonly property real maxDrop: full
+            ? Math.max(power.expandedDrop, clock.expandedDrop, media.expandedDrop) : 0
+
+        implicitHeight: Config.barHeight + maxDrop + Config.borderWidth * 2
         exclusiveZone: Config.barHeight
         color: "transparent"
 
@@ -32,36 +33,57 @@ Variants {
                 height: Config.barHeight
             }
             Region {
-                x: Math.round((bar.width - Config.tabWidth) / 2)
+                x: Math.round(clock.x)
                 y: Config.barHeight
-                width: Config.tabWidth
-                height: bar.full ? Config.tabDropHover : 0
+                width: clock.width
+                height: bar.full ? clock.expandedDrop : 0
+            }
+            Region {
+                x: Math.round(power.x)
+                y: Config.barHeight
+                width: power.width
+                height: bar.full ? power.expandedDrop : 0
+            }
+            // Pin-only tab: armed only while open (or closing), so no
+            // permanent dead strip mid-screen.
+            Region {
+                x: Math.round(media.x)
+                y: Config.barHeight
+                width: media.width
+                height: (bar.full && media.drop > 0) ? media.expandedDrop : 0
             }
         }
 
         BarSurface {
             anchors.fill: parent
-            drawTab: bar.full
-            tabDrop: bar.full ? clock.drop : Config.tabDrop
+            tabs: bar.full ? [clock, power, media] : []
         }
 
-        // ── LEFT: workspaces ──
+        // ── LEFT ──
+        PowerButton {
+            id: power
+            visible: bar.full
+            anchors.left: parent.left
+            anchors.leftMargin: Theme.gap
+            y: 0
+        }
         Workspaces {
             screen: bar.modelData
-            anchors.left: parent.left
+            anchors.left: bar.full ? power.right : parent.left
             anchors.leftMargin: Theme.gap
             y: (Config.barHeight - height) / 2
         }
 
-        // ── CENTER: clock tab, with mpris hanging off its right ──
+        // ── CENTER ──
         ClockTab {
             id: clock
             visible: bar.full
             anchors.horizontalCenter: parent.horizontalCenter
             y: 0
         }
-        MprisModule {
-            visible: bar.full
+        MediaTab {
+            id: media
+            visible: bar.full && media.player !== null
             anchors.left: clock.right
             anchors.leftMargin: Theme.gap * 8
             y: 0
@@ -72,16 +94,16 @@ Variants {
             y: (Config.barHeight - height) / 2
         }
 
-        // ── RIGHT: tray owns the edge ──
+        // ── RIGHT ──
         RowLayout {
             visible: bar.full
             anchors.right: parent.right
             anchors.rightMargin: Theme.gap
             y: 0
             height: Config.barHeight
-	    spacing: Theme.gap
+            spacing: Theme.gap
 
-	    AudioModule {}
+            AudioModule {}
             Tray {}
         }
     }

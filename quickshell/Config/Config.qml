@@ -4,12 +4,13 @@ import Quickshell
 Singleton {
     // --- geometry ---
     readonly property int barHeight:    34
-    readonly property int tabWidth:     96
-    readonly property int tabDrop:      20
-    readonly property int tabDropHover: 26
-    readonly property int tabFillet:    10
-    readonly property int tabRadius:    10
+    readonly property int tabWidth:     116
+    readonly property int tabDrop:      0     
+    readonly property int tabDropHover: 30    
+    readonly property int tabFillet:    12    
+    readonly property int tabRadius:    8
     readonly property int borderWidth:  1
+
 
     // --- type ---
     readonly property string font:     "JetBrainsMono Nerd Font"
@@ -23,6 +24,4 @@ Singleton {
     // --- per-monitor ---
     readonly property string fullBarMonitor: "DP-3"   // <- EDIT: your monitor's name from `hyprctl monitors`
 
-    // --- integrations ---
-    readonly property string obsidianAppId: "obsidian"  // <- Opens Obsidian  
 }

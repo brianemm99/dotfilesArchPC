@@ -5,67 +5,42 @@ import qs.Config
 
 Shape {
     id: root
-    property bool drawTab: true
-    property real tabDrop: Config.tabDrop
+    property var tabs: []
 
     preferredRendererType: Shape.CurveRenderer
 
-    // When drawTab is false these go to zero and the tab flattens
-    // into a straight bottom edge (the lean bar's case).
-    readonly property real effFillet: drawTab ? Config.tabFillet : 0
-    readonly property real effRadius: drawTab ? Config.tabRadius : 0
-    readonly property real effDrop:   drawTab ? tabDrop : 0
+    function buildPath() {
+        const W = width, H = Config.barHeight;
+        const fmt = (v) => v.toFixed(2);
+        let d = `M 0 0 L ${fmt(W)} 0 L ${fmt(W)} ${fmt(H)}`;
 
-    readonly property real tabLeft:   (width - Config.tabWidth) / 2
-    readonly property real tabRight:  (width + Config.tabWidth) / 2
-    readonly property real tabBottom: Config.barHeight + effDrop
+        const list = tabs.slice().sort((a, b) => b.x - a.x);
+        for (const t of list) {
+            // Curves scale against THIS tab's own depth, so a 30px clock
+            // tab and a 190px power tab both keep proper proportions.
+            const rev = t.expandedDrop > 0
+                ? Math.min(1, t.drop / t.expandedDrop) : 0;
+            const f = Config.tabFillet * rev;
+            const r = Config.tabRadius * rev;
+            const L = t.x, R = t.x + t.width, B = H + t.drop;
+            d += ` L ${fmt(R + f)} ${fmt(H)}`
+               + ` A ${fmt(f)} ${fmt(f)} 0 0 0 ${fmt(R)} ${fmt(H + f)}`
+               + ` L ${fmt(R)} ${fmt(B - r)}`
+               + ` A ${fmt(r)} ${fmt(r)} 0 0 1 ${fmt(R - r)} ${fmt(B)}`
+               + ` L ${fmt(L + r)} ${fmt(B)}`
+               + ` A ${fmt(r)} ${fmt(r)} 0 0 1 ${fmt(L)} ${fmt(B - r)}`
+               + ` L ${fmt(L)} ${fmt(H + f)}`
+               + ` A ${fmt(f)} ${fmt(f)} 0 0 0 ${fmt(L - f)} ${fmt(H)}`;
+        }
+
+        d += ` L 0 ${fmt(H)} Z`;
+        return d;
+    }
 
     ShapePath {
         fillColor: Theme.barBg
         strokeColor: Theme.barBorder
         strokeWidth: Config.borderWidth
-
-        startX: 0; startY: 0
-        PathLine { x: root.width; y: 0 }
-        PathLine { x: root.width; y: Config.barHeight }
-
-        // right shoulder: concave fillet into the tab
-        PathLine { x: root.tabRight + root.effFillet; y: Config.barHeight }
-        PathArc {
-            x: root.tabRight
-            y: Config.barHeight + root.effFillet
-            radiusX: root.effFillet; radiusY: root.effFillet
-            direction: PathArc.Counterclockwise
-        }
-
-        // down the right side, round the bottom-right corner
-        PathLine { x: root.tabRight; y: root.tabBottom - root.effRadius }
-        PathArc {
-            x: root.tabRight - root.effRadius
-            y: root.tabBottom
-            radiusX: root.effRadius; radiusY: root.effRadius
-            direction: PathArc.Clockwise
-        }
-
-        // across the bottom, round the bottom-left corner
-        PathLine { x: root.tabLeft + root.effRadius; y: root.tabBottom }
-        PathArc {
-            x: root.tabLeft
-            y: root.tabBottom - root.effRadius
-            radiusX: root.effRadius; radiusY: root.effRadius
-            direction: PathArc.Clockwise
-        }
-
-        // up the left side, concave fillet back into the bar
-        PathLine { x: root.tabLeft; y: Config.barHeight + root.effFillet }
-        PathArc {
-            x: root.tabLeft - root.effFillet
-            y: Config.barHeight
-            radiusX: root.effFillet; radiusY: root.effFillet
-            direction: PathArc.Counterclockwise
-        }
-
-        PathLine { x: 0; y: Config.barHeight }
-        PathLine { x: 0; y: 0 }
+        PathSvg { path: root.buildPath() }
     }
 }
