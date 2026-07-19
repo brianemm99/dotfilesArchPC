@@ -48,7 +48,7 @@
 # # Just for example:
 # resize-overlay-duration = 4s 200ms
 
-config-file = colors.conf
+# config-file = colors.conf
 confirm-close-surface = false
 #command = tmux new-session -A -s main
 keybind = ctrl+shift+left=goto_split:left

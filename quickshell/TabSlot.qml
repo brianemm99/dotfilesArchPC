@@ -5,14 +5,19 @@ import qs.Config
 Item {
     id: root
 
+    // Footprint in the bar (the "face").
     property real tabWidth: Config.tabWidth
+
+    // Open-panel width — may exceed the face. The shape's bump grows
+    // from tabWidth to panelWidth as the tab opens.
+    property real panelWidth: tabWidth
+
+    // How the wide panel aligns to the face: "center", "left", "right".
+    // A right-edge tab uses "right" so the panel grows leftward.
+    property string panelAlign: "center"
+
     property real expandedDrop: Config.tabDropHover
-
-    // If false, hover does nothing — the tab opens only via `pinned`
-    // (click/shortcut). Lets big panels stay out of the way, and lets
-    // Bar.qml arm their mask region only while open.
     property bool hoverOpens: true
-
     property bool pinned: false
 
     readonly property alias hovered: hover.containsMouse
@@ -26,6 +31,12 @@ Item {
 
     readonly property real reveal: expandedDrop > 0 ? drop / expandedDrop : 0
 
+    // Current bump geometry, slot-local. BarSurface reads these.
+    readonly property real bumpWidth: tabWidth + (panelWidth - tabWidth) * reveal
+    readonly property real bumpX: panelAlign === "right" ? tabWidth - bumpWidth
+                                : panelAlign === "left"  ? 0
+                                : (tabWidth - bumpWidth) / 2
+
     implicitWidth: tabWidth
     implicitHeight: Config.barHeight + expandedDrop
 
@@ -33,7 +44,12 @@ Item {
 
     MouseArea {
         id: hover
-        anchors.fill: parent
+        // Cover face plus wherever the panel extends.
+        x: Math.min(0, root.panelAlign === "right" ? root.tabWidth - root.panelWidth
+                     : root.panelAlign === "left" ? 0
+                     : (root.tabWidth - root.panelWidth) / 2)
+        width: Math.max(root.tabWidth, root.panelWidth)
+        height: root.implicitHeight
         hoverEnabled: true
         onClicked: (m) => { if (m.y < Config.barHeight) root.barClicked() }
     }

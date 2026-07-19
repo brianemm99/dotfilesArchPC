@@ -43,9 +43,9 @@ hl.monitor({
 
 -- Set programs that you use
 local terminal    = "ghostty"
-local fileManager = "yazi"
-local menu        = "hyprlauncher"
-
+local fileManager = "ghostty -e yazi"
+local menu        = "quickshell:launcher"
+local power       = "quickshell:powermenu"
 
 -------------------
 ---- AUTOSTART ----
@@ -275,8 +275,9 @@ hl.bind(mainMod .. " + Return", hl.dsp.exec_cmd(terminal))
 local closeWindowBind = hl.bind(mainMod .. " + Q", hl.dsp.window.close())
 -- closeWindowBind:set_enabled(false)
 -- hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"))
-hl.bind(mainMod .. " + M", hl.dsp.global("quickshell:powermenu"))
-hl.bind(mainMod .. " + E", hl.dsp.exec_cmd("yazi"))
+hl.bind(mainMod .. " + M", hl.dsp.global(power))
+hl.bind(mainMod .. " + Space", hl.dsp.global(menu))
+hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
 hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(menu))
 hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())

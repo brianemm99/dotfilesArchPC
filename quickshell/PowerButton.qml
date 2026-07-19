@@ -10,6 +10,7 @@ TabSlot {
 
     tabWidth: 46
     expandedDrop: 186
+    hoverOpens: false           // pin-only: click or Super+M — no transit-flash
     onBarClicked: pinned = !pinned
 
     readonly property var entries: [
@@ -17,7 +18,7 @@ TabSlot {
         { icon: "󰜉", cmd: ["systemctl", "reboot"]    },
         { icon: "󰒲", cmd: ["systemctl", "suspend"]   },
         { icon: "󰓡", cmd: ["systemctl", "hibernate"] },
-        { icon: "󰍃", cmd: null }   // logout → Hyprland exit dispatch
+        { icon: "󰍃", cmd: null }
     ]
 
     function run(entry) {

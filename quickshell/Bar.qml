@@ -38,14 +38,14 @@ Variants {
                 width: clock.width
                 height: bar.full ? clock.expandedDrop : 0
             }
+            // Pin-only tabs: armed only while open — no dead strips,
+            // no hover transit-flash.
             Region {
                 x: Math.round(power.x)
                 y: Config.barHeight
                 width: power.width
-                height: bar.full ? power.expandedDrop : 0
+                height: (bar.full && power.drop > 0) ? power.expandedDrop : 0
             }
-            // Pin-only tab: armed only while open (or closing), so no
-            // permanent dead strip mid-screen.
             Region {
                 x: Math.round(media.x)
                 y: Config.barHeight
@@ -95,16 +95,27 @@ Variants {
         }
 
         // ── RIGHT ──
-        RowLayout {
+        Tray {
+            id: tray
             visible: bar.full
             anchors.right: parent.right
             anchors.rightMargin: Theme.gap
             y: 0
             height: Config.barHeight
+        }
+        RowLayout {
+            visible: bar.full
+            anchors.right: tray.left
+            anchors.rightMargin: Theme.gap
+            y: 0
+            height: Config.barHeight
             spacing: Theme.gap
 
+            WifiModule {}
+            BtModule {}
             AudioModule {}
-            Tray {}
+            BellModule {}
+            GearModule {}
         }
     }
 }

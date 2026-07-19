@@ -1,0 +1,2 @@
+singleton Notifs Notifs.qml
+singleton Panels Panels.qml

@@ -14,15 +14,14 @@ Shape {
         const fmt = (v) => v.toFixed(2);
         let d = `M 0 0 L ${fmt(W)} 0 L ${fmt(W)} ${fmt(H)}`;
 
-        const list = tabs.slice().sort((a, b) => b.x - a.x);
+        const list = tabs.slice().sort(
+            (a, b) => (b.x + b.bumpX) - (a.x + a.bumpX));
         for (const t of list) {
-            // Curves scale against THIS tab's own depth, so a 30px clock
-            // tab and a 190px power tab both keep proper proportions.
             const rev = t.expandedDrop > 0
                 ? Math.min(1, t.drop / t.expandedDrop) : 0;
             const f = Config.tabFillet * rev;
             const r = Config.tabRadius * rev;
-            const L = t.x, R = t.x + t.width, B = H + t.drop;
+            const L = t.x + t.bumpX, R = L + t.bumpWidth, B = H + t.drop;
             d += ` L ${fmt(R + f)} ${fmt(H)}`
                + ` A ${fmt(f)} ${fmt(f)} 0 0 0 ${fmt(R)} ${fmt(H + f)}`
                + ` L ${fmt(R)} ${fmt(B - r)}`

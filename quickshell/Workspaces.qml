@@ -8,34 +8,76 @@ import qs.Config
 RowLayout {
     id: root
     required property var screen
-    spacing: 4
+    spacing: 6
 
     readonly property var monitor: Hyprland.monitorFor(root.screen)
+    readonly property int persistCount: 5
+
+    // Slots 1..5 always; higher ids appended only if they exist on this
+    // monitor (Hyprland only reports existing workspaces, so persistence
+    // is synthesized here).
+    readonly property var slots: {
+        const out = [];
+        for (let i = 1; i <= persistCount; i++) out.push(i);
+        for (const ws of Hyprland.workspaces.values) {
+            if (ws.id > persistCount && ws.monitor === root.monitor)
+                out.push(ws.id);
+        }
+        return out;
+    }
 
     Repeater {
-        model: Hyprland.workspaces
+        model: root.slots
 
-        Rectangle {
-            required property HyprlandWorkspace modelData
+        Item {
+            id: slot
+            required property int modelData
 
+            readonly property var ws:
+                Hyprland.workspaces.values.find(w => w.id === slot.modelData) ?? null
             readonly property bool active:
-                modelData.id === root.monitor?.activeWorkspace?.id
+                slot.modelData === root.monitor?.activeWorkspace?.id
+            readonly property bool occupied:
+                (slot.ws?.lastIpcObject?.windows ?? 0) > 0
 
-            visible: modelData.monitor === root.monitor
+            // Persistent slots always visible on every bar; dynamic (>5)
+            // slots only on their own monitor (enforced at model build).
+            // A persistent slot whose workspace lives on the OTHER monitor
+            // still shows here as its state — by design; flag if unwanted.
+            Layout.preferredWidth: 14
+            Layout.preferredHeight: 14
 
-            implicitWidth: active ? 26 : 10
-            implicitHeight: 10
-            radius: height / 2
-            color: active ? Theme.primary : Theme.surfaceHigh
-
-            Behavior on implicitWidth {
-                NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+            // empty: small muted dot
+            Rectangle {
+                anchors.centerIn: parent
+                width: 5; height: 5; radius: 2.5
+                color: Theme.surfaceHigh
+                visible: !slot.active && !slot.occupied
             }
-            Behavior on color { ColorAnimation { duration: 150 } }
+
+            // occupied, inactive: large hollow ring
+            Rectangle {
+                anchors.centerIn: parent
+                width: 12; height: 12; radius: 6
+                color: "transparent"
+                border.color: Theme.fgMuted
+                border.width: 1.5
+                visible: !slot.active && slot.occupied
+            }
+
+            // active: large filled circle
+            Rectangle {
+                anchors.centerIn: parent
+                width: 12; height: 12; radius: 6
+                color: Theme.primary
+                visible: slot.active
+
+                Behavior on width { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+            }
 
             MouseArea {
                 anchors.fill: parent
-		onClicked: Hyprland.dispatch(`hl.dsp.focus({ workspace = ${modelData.id} })`)
+                onClicked: Hyprland.dispatch(`hl.dsp.focus({ workspace = ${slot.modelData} })`)
             }
         }
     }
