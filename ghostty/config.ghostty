@@ -50,6 +50,8 @@
 
 # config-file = colors.conf
 confirm-close-surface = false
+background = 121212
+foreground = D1D1D1
 #command = tmux new-session -A -s main
 keybind = ctrl+shift+left=goto_split:left
 keybind = ctrl+shift+right=goto_split:right
