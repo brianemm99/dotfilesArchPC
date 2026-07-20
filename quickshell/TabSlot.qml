@@ -1,19 +1,12 @@
 import QtQuick
 import qs.Config
+import qs.Services
 
-// Base for anything living as a tab on the bar's bottom edge.
 Item {
     id: root
 
-    // Footprint in the bar (the "face").
     property real tabWidth: Config.tabWidth
-
-    // Open-panel width — may exceed the face. The shape's bump grows
-    // from tabWidth to panelWidth as the tab opens.
     property real panelWidth: tabWidth
-
-    // How the wide panel aligns to the face: "center", "left", "right".
-    // A right-edge tab uses "right" so the panel grows leftward.
     property string panelAlign: "center"
 
     property real expandedDrop: Config.tabDropHover
@@ -31,7 +24,6 @@ Item {
 
     readonly property real reveal: expandedDrop > 0 ? drop / expandedDrop : 0
 
-    // Current bump geometry, slot-local. BarSurface reads these.
     readonly property real bumpWidth: tabWidth + (panelWidth - tabWidth) * reveal
     readonly property real bumpX: panelAlign === "right" ? tabWidth - bumpWidth
                                 : panelAlign === "left"  ? 0
@@ -42,9 +34,14 @@ Item {
 
     signal barClicked()
 
+    // Super+Esc unpins every tab
+    Connections {
+        target: Panels
+        function onDismissAll() { root.pinned = false }
+    }
+
     MouseArea {
         id: hover
-        // Cover face plus wherever the panel extends.
         x: Math.min(0, root.panelAlign === "right" ? root.tabWidth - root.panelWidth
                      : root.panelAlign === "left" ? 0
                      : (root.tabWidth - root.panelWidth) / 2)

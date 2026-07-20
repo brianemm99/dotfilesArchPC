@@ -1,11 +1,12 @@
 pragma Singleton
 import Quickshell
+import Quickshell.Hyprland
 import QtQuick
 
 Singleton {
     id: root
 
-    property bool pinned: false        // click-toggled; survives mouse leave
+    property bool pinned: false
     property bool gearHover: false
     property bool panelHover: false
 
@@ -27,5 +28,19 @@ Singleton {
         id: closeTimer
         interval: 350
         onTriggered: root.settingsOpen = false
+    }
+
+    // ── Super+Esc: close every shell surface ──
+    signal dismissAll()
+
+    GlobalShortcut {
+        appid: "quickshell"
+        name: "dismiss"
+        onPressed: {
+            root.closeSettings();
+            Notifs.panelOpen = false;
+            Notifs.clearToasts();
+            root.dismissAll();      // tabs and launcher listen for this
+        }
     }
 }

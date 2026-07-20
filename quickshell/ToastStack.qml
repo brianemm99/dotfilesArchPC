@@ -55,15 +55,29 @@ PanelWindow {
                 height: bodyCol.implicitHeight + 24
 
                 property real slide: 0
+                property bool leaving: false
                 Component.onCompleted: slide = 1
                 Behavior on slide {
                     NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
                 }
 
+                // slide out, THEN remove from the model
+                function leave() {
+                    if (leaving) return;
+                    leaving = true;
+                    slide = 0;
+                    gone.start();
+                }
+                Timer {
+                    id: gone
+                    interval: 220
+                    onTriggered: Notifs.removeToast(card.seq)
+                }
+
                 Timer {
                     interval: 6000
-                    running: !cardHover.containsMouse
-                    onTriggered: Notifs.removeToast(card.seq)
+                    running: !cardHover.containsMouse && !card.leaving
+                    onTriggered: card.leave()
                 }
 
                 Rectangle {
@@ -130,7 +144,7 @@ PanelWindow {
                             id: xHover
                             anchors.fill: parent
                             hoverEnabled: true
-                            onClicked: Notifs.removeToast(card.seq)
+                            onClicked: card.leave()
                         }
                     }
                 }

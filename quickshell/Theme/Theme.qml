@@ -1,19 +1,38 @@
 pragma Singleton
 import Quickshell
+import Quickshell.Io
 import QtQuick
 
 Singleton {
+    id: root
+
     readonly property int gap: 8
 
-    // Hardcoded stub — matugen adapter swaps in here later.
-    // NOTE: no token may be named "on" + Capital — QML parses that
-    // as a signal handler. Hence fg/fgMuted, not onSurface/...Variant.
-    readonly property color surface:     "#1a1b26"
-    readonly property color surfaceHigh: "#2a2b3d"
-    readonly property color fg:          "#c0caf5"
-    readonly property color fgMuted:     "#787c99"
-    readonly property color primary:     "#7aa2f7"
+    FileView {
+        id: file
+        path: Qt.resolvedUrl("./colors.json")
+        watchChanges: true
+        onFileChanged: reload()
 
-    readonly property color barBg: Qt.rgba(surface.r, surface.g, surface.b, 0.87)
-    readonly property color barBorder: Qt.darker("#4a4a4a", 1.4)
+        JsonAdapter {
+            id: adapter
+            property string surface:     "#1a1b26"
+            property string surfaceHigh: "#2a2b3d"
+            property string fg:          "#c0caf5"
+            property string fgMuted:     "#787c99"
+            property string primary:     "#7aa2f7"
+            property string outline:     "#4a4a4a"
+        }
+    }
+
+    readonly property color surface:     adapter.surface
+    readonly property color surfaceHigh: adapter.surfaceHigh
+    readonly property color fg:          adapter.fg
+    readonly property color fgMuted:     adapter.fgMuted
+    readonly property color primary:     adapter.primary
+
+    // Structural derivations stay ours — matugen supplies raw material.
+    readonly property color barBg: Qt.rgba(
+        surface.r, surface.g, surface.b, 0.87)
+    readonly property color barBorder: Qt.darker(adapter.outline, 1.4)
 }

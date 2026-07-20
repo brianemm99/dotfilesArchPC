@@ -34,11 +34,9 @@ PanelWindow {
     implicitHeight: 420
     color: "transparent"
 
-    // ── pinned defaults, in display order ──
     readonly property var pins:
         ["brave", "obsidian", "yazi", "bluetui", "spotify", "discord", "obs", "steam"]
 
-    // rank: exact name match beats startsWith; -1 = not pinned
     function pinRank(entry) {
         const n = entry.name.toLowerCase();
         let starts = -1;
@@ -61,13 +59,24 @@ PanelWindow {
         }
     }
 
+    // click anywhere outside → close
+    HyprlandFocusGrab {
+        active: root.open
+        windows: [ root ]
+        onCleared: root.close()
+    }
+
+    // Super+Esc closes this too
+    Connections {
+        target: Panels
+        function onDismissAll() { root.close() }
+    }
+
     function close() { root.open = false }
 
     function launch(entry) {
         if (!entry) return;
         close();
-        // Terminal=true apps (yazi, bluetui, htop...) die without a
-        // terminal — wrap them in one instead of execute().
         if (entry.runInTerminal ?? false) {
             const cmd = ["ghostty", "-e"].concat(entry.command);
             Quickshell.execDetached(cmd);
@@ -82,11 +91,9 @@ PanelWindow {
             .filter(e => !e.noDisplay);
 
         if (q === "") {
-            // pins in pin order, no tail — the preset view
             const pinned = all
                 .map(e => ({ e, rank: root.pinRank(e) }))
                 .filter(p => p.rank >= 0);
-            // exact beats startsWith at the same index
             pinned.sort((a, b) => a.rank - b.rank
                 || a.e.name.length - b.e.name.length);
             const seen = new Set();
@@ -115,7 +122,7 @@ PanelWindow {
     function cycle(dir) {
         const n = root.filtered.length;
         if (n === 0) return;
-        list.currentIndex = ((list.currentIndex + dir) % n + n) % n;   // wraps
+        list.currentIndex = ((list.currentIndex + dir) % n + n) % n;
     }
 
     Rectangle {
