@@ -18,13 +18,7 @@ TabSlot {
     hoverOpens: false
     onBarClicked: pinned = !pinned
 
-    // ── sticky player selection ──
-    // Browsers (Brave) register empty MPRIS players; the old
-    // `playing ?? values[0]` bound to Brave the moment Spotify paused:
-    // white art, 0:00, play toggling the wrong player. Now: whoever is
-    // playing wins; through pauses we STICK with the last player that
-    // played (while it still exists); else first player with an actual
-    // track; else first player at all.
+    // ── sticky player selection (Brave-pause bug fix — keep) ──
     property var stickyPlayer: null
     readonly property var playingPlayer:
         Mpris.players.values.find(p => p.isPlaying) ?? null
@@ -57,6 +51,36 @@ TabSlot {
         s = Math.max(0, Math.round(s));
         const m = Math.floor(s / 60), r = s % 60;
         return `${m}:${r < 10 ? "0" : ""}${r}`;
+    }
+
+    // ── circular control button: the disc IS the click target ──
+    component ControlButton: Rectangle {
+        id: btn
+        property string glyph
+        property real glyphSize: 18
+        signal pressed()
+
+        radius: width / 2
+        color: btnHover.containsMouse
+            ? (btnHover.pressedButtons ? Qt.darker(Theme.surfaceHigh, 1.15)
+                                       : Qt.lighter(Theme.surfaceHigh, 1.25))
+            : Theme.surfaceHigh
+        Behavior on color { ColorAnimation { duration: 90 } }
+
+        Text {
+            anchors.centerIn: parent
+            text: btn.glyph
+            color: Theme.fg
+            font.family: Config.font
+            font.pixelSize: btn.glyphSize
+        }
+
+        MouseArea {
+            id: btnHover
+            anchors.fill: parent
+            hoverEnabled: true
+            onClicked: btn.pressed()
+        }
     }
 
     // ── in-bar face: art thumb + marquee ──
@@ -123,8 +147,6 @@ TabSlot {
         opacity: root.reveal
         visible: root.reveal > 0.05
 
-        // art — transparent base + placeholder glyph when no art exists,
-        // so a track-less player can never render a white slab again
         ClippingRectangle {
             id: art
             anchors.left: parent.left
@@ -153,7 +175,7 @@ TabSlot {
             }
         }
 
-        // controls — centered between art and right edge, scaled to artSize
+        // controls — three discs, centered in the zone right of the art
         Item {
             anchors.left: art.right
             anchors.right: parent.right
@@ -162,31 +184,28 @@ TabSlot {
 
             Row {
                 anchors.centerIn: parent
-                spacing: root.artSize * 0.22
+                spacing: root.artSize * 0.13
 
-                Text {
-                    text: "󰒮"
-                    color: Theme.fg
-                    font.family: Config.font
-                    font.pixelSize: root.artSize * 0.16
+                ControlButton {
+                    width: root.artSize * 0.34; height: width
                     anchors.verticalCenter: parent.verticalCenter
-                    MouseArea { anchors.fill: parent; onClicked: root.player?.previous() }
+                    glyph: "󰒮"
+                    glyphSize: root.artSize * 0.15
+                    onPressed: root.player?.previous()
                 }
-                Text {
-                    text: root.player?.isPlaying ? "󰏤" : "󰐊"
-                    color: Theme.fg
-                    font.family: Config.font
-                    font.pixelSize: root.artSize * 0.24
+                ControlButton {
+                    width: root.artSize * 0.46; height: width
                     anchors.verticalCenter: parent.verticalCenter
-                    MouseArea { anchors.fill: parent; onClicked: root.player?.togglePlaying() }
+                    glyph: root.player?.isPlaying ? "󰏤" : "󰐊"
+                    glyphSize: root.artSize * 0.21
+                    onPressed: root.player?.togglePlaying()
                 }
-                Text {
-                    text: "󰒭"
-                    color: Theme.fg
-                    font.family: Config.font
-                    font.pixelSize: root.artSize * 0.16
+                ControlButton {
+                    width: root.artSize * 0.34; height: width
                     anchors.verticalCenter: parent.verticalCenter
-                    MouseArea { anchors.fill: parent; onClicked: root.player?.next() }
+                    glyph: "󰒭"
+                    glyphSize: root.artSize * 0.15
+                    onPressed: root.player?.next()
                 }
             }
         }
