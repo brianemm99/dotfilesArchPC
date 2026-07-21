@@ -8,7 +8,7 @@ import qs.Config
 TabSlot {
     id: root
 
-    // ── THE KNOBS — tune these three, everything below derives ──
+    // ── THE KNOBS ──
     tabWidth: 430
     readonly property real artSize: 140
     readonly property real seekH:   20
@@ -18,8 +18,24 @@ TabSlot {
     hoverOpens: false
     onBarClicked: pinned = !pinned
 
-    readonly property var player:
-        Mpris.players.values.find(p => p.isPlaying) ?? Mpris.players.values[0] ?? null
+    // ── sticky player selection ──
+    // Browsers (Brave) register empty MPRIS players; the old
+    // `playing ?? values[0]` bound to Brave the moment Spotify paused:
+    // white art, 0:00, play toggling the wrong player. Now: whoever is
+    // playing wins; through pauses we STICK with the last player that
+    // played (while it still exists); else first player with an actual
+    // track; else first player at all.
+    property var stickyPlayer: null
+    readonly property var playingPlayer:
+        Mpris.players.values.find(p => p.isPlaying) ?? null
+    onPlayingPlayerChanged: if (playingPlayer) stickyPlayer = playingPlayer
+
+    readonly property var player: playingPlayer
+        ?? ((stickyPlayer && Mpris.players.values.includes(stickyPlayer))
+                ? stickyPlayer : null)
+        ?? Mpris.players.values.find(p => (p.trackTitle ?? "") !== "")
+        ?? Mpris.players.values[0] ?? null
+
     visible: player !== null
 
     readonly property real len: player?.length ?? 0
@@ -51,6 +67,7 @@ TabSlot {
 
         ClippingRectangle {
             width: 18; height: 18; radius: 4
+            color: "transparent"
             anchors.verticalCenter: parent.verticalCenter
             visible: (root.player?.trackArtUrl ?? "") !== ""
             Image {
@@ -106,17 +123,33 @@ TabSlot {
         opacity: root.reveal
         visible: root.reveal > 0.05
 
-        // art — left, the panel's anchor piece
+        // art — transparent base + placeholder glyph when no art exists,
+        // so a track-less player can never render a white slab again
         ClippingRectangle {
             id: art
             anchors.left: parent.left
             anchors.top: parent.top
             width: root.artSize; height: root.artSize; radius: 10
+            color: "transparent"
+
+            Rectangle {
+                anchors.fill: parent
+                color: Theme.surfaceHigh
+                visible: (root.player?.trackArtUrl ?? "") === ""
+                Text {
+                    anchors.centerIn: parent
+                    text: "󰝚"
+                    color: Theme.fgMuted
+                    font.family: Config.font
+                    font.pixelSize: root.artSize * 0.3
+                }
+            }
             Image {
                 anchors.fill: parent
                 source: root.player?.trackArtUrl ?? ""
                 fillMode: Image.PreserveAspectCrop
                 asynchronous: true
+                visible: (root.player?.trackArtUrl ?? "") !== ""
             }
         }
 
@@ -192,21 +225,16 @@ TabSlot {
 
             Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
-                width: parent.width
-                height: seek.trackH
-                radius: height / 2
+                width: parent.width; height: seek.trackH; radius: height / 2
                 color: Theme.surfaceHigh
                 Behavior on height { NumberAnimation { duration: 100 } }
             }
             Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
-                width: parent.width * root.frac
-                height: seek.trackH
-                radius: height / 2
+                width: parent.width * root.frac; height: seek.trackH; radius: height / 2
                 color: Theme.primary
                 Behavior on height { NumberAnimation { duration: 100 } }
             }
-
             Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 x: Math.max(0, Math.min(parent.width - width, parent.width * root.frac - width / 2))

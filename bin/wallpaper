@@ -1,0 +1,27 @@
+#!/bin/sh
+# usage: wallpaper /path/to/image
+[ -f "$1" ] || { echo "no such file: $1" >&2; exit 1; }
+img=$(realpath "$1")
+
+mons=$(hyprctl monitors -j | jq -r '.[].name')
+
+# live switch — the only IPC verb this hyprpaper build accepts
+for m in $mons; do
+    hyprctl hyprpaper wallpaper "$m,$img"
+done
+
+# stash for wallpaper-restore at login
+mkdir -p ~/.cache
+printf '%s\n' "$img" > ~/.cache/wallpaper-current
+
+# conf: inert on this hyprpaper build (parser ignores rules), kept in case
+# a future build honors it again
+{
+    echo "preload = $img"
+    for m in $mons; do
+        echo "wallpaper = $m,$img"
+    done
+    echo "splash = false"
+} > ~/.config/hypr/hyprpaper.conf
+
+matugen image --source-color-index 0 "$img"

@@ -59,7 +59,7 @@ local power       = "quickshell:powermenu"
 hl.on("hyprland.start", function () 
   hl.exec_cmd("qs")
   hl.exec_cmd("hyprpaper")
-
+  hl.exec_cmd("sh -c 'sleep 0.8; ~/.local/bin/wallpaper-restore'")
 end)
 
 
@@ -100,6 +100,22 @@ hl.env("QT_QPA_PLATFORMTHEME", "qt6ct")
 -----------------------
 
 -- Refer to https://wiki.hypr.land/Configuring/Basics/Variables/
+
+-- matugen palette (generated data); your current colors as fallback.
+local ok, mc = pcall(dofile, os.getenv("HOME") .. "/.cache/matugen/hypr-colors.lua")
+local border_col
+if ok and type(mc) == "table" and mc.active then
+    border_col = {
+        active_border   = { colors = { "rgba(" .. mc.active .. "ee)", "rgba(" .. mc.active2 .. "ee)" }, angle = 45 },
+        inactive_border = "rgba(" .. mc.inactive .. "aa)",
+    }
+else
+    border_col = {
+        active_border   = { colors = { "rgba(33ccffee)", "rgba(00ff99ee)" }, angle = 45 },
+        inactive_border = "rgba(595959aa)",
+    }
+end
+
 hl.config({
     general = {
         gaps_in  = 3,
@@ -107,10 +123,7 @@ hl.config({
 
         border_size = 2,
 
-        col = {
-            active_border   = { colors = {"rgba(33ccffee)", "rgba(00ff99ee)"}, angle = 45 },
-            inactive_border = "rgba(595959aa)",
-        },
+        col = border_col,
 
         -- Set to true to enable resizing windows by clicking and dragging on borders and gaps
         resize_on_border = false,
@@ -126,8 +139,8 @@ hl.config({
         rounding_power = 2,
 
         -- Change transparency of focused and unfocused windows
-        active_opacity   = 0.99,
-        inactive_opacity = 0.95,
+        active_opacity   = 0.97,
+        inactive_opacity = 0.92,
 
         shadow = {
             enabled      = true,

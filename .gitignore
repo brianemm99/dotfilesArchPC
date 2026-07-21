@@ -34,3 +34,5 @@ vimrc.local
 *.swo
 *~
 .viminfo
+quickshell/Theme/colors.json
+hypr/hyprpaper.conf

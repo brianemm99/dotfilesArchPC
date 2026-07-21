@@ -1,0 +1,11 @@
+#!/bin/sh
+# re-applies the last wallpaper via hyprpaper IPC; run at login after
+# hyprpaper is up. exits silently if there's nothing to restore.
+f="$HOME/.cache/wallpaper-current"
+[ -f "$f" ] || exit 0
+img=$(cat "$f")
+[ -f "$img" ] || exit 0
+
+for m in $(hyprctl monitors -j | jq -r '.[].name'); do
+    hyprctl hyprpaper wallpaper "$m,$img"
+done
