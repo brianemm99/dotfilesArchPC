@@ -6,4 +6,5 @@ ShellRoot {
     SettingsPanel {}
     Launcher {}
     ToastStack {}
+    WallpaperPicker {}
 }

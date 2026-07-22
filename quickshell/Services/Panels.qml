@@ -11,6 +11,7 @@ Singleton {
     property bool panelHover: false
 
     property bool settingsOpen: false
+    property bool wallpaperOpen: false
 
     readonly property bool wantOpen: pinned || gearHover || panelHover
     onWantOpenChanged: {
@@ -24,13 +25,18 @@ Singleton {
         settingsOpen = false;
     }
 
+    function openWallpaper() {
+        closeSettings();
+        Notifs.panelOpen = false;
+        wallpaperOpen = true;
+    }
+
     Timer {
         id: closeTimer
         interval: 350
         onTriggered: root.settingsOpen = false
     }
 
-    // ── Super+Esc: close every shell surface ──
     signal dismissAll()
 
     GlobalShortcut {
@@ -40,7 +46,7 @@ Singleton {
             root.closeSettings();
             Notifs.panelOpen = false;
             Notifs.clearToasts();
-            root.dismissAll();      // tabs and launcher listen for this
+            root.dismissAll();      // tabs, launcher, wallpaper picker listen
         }
     }
 }

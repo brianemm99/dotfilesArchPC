@@ -19,7 +19,6 @@ PanelWindow {
     }
     screen: targetScreen
 
-    // ── roll-out machinery ──
     property real slide: Panels.settingsOpen ? 1 : 0
     Behavior on slide {
         NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
@@ -34,7 +33,7 @@ PanelWindow {
     readonly property real fil: Config.tabFillet
 
     implicitWidth: 340
-    implicitHeight: 250 + fil * 2
+    implicitHeight: 300 + fil * 2
     color: "transparent"
 
     HoverHandler {
@@ -235,6 +234,44 @@ PanelWindow {
 
             MixRow { node: root.sinkNode }
             MixRow { node: root.srcNode; iconOn: "󰍬"; iconOff: "󰍭" }
+
+            Item { width: 1; height: 2 }
+
+            // ── Wallpaper & Theme → picker ──
+            Rectangle {
+                width: parent.width
+                height: 36
+                radius: height / 2
+                color: wpHover.containsMouse
+                    ? Qt.lighter(Theme.surfaceHigh, 1.25) : Theme.surfaceHigh
+                Behavior on color { ColorAnimation { duration: 90 } }
+
+                Row {
+                    anchors.centerIn: parent
+                    spacing: 8
+                    Text {
+                        text: "󰸉"
+                        color: Theme.fg
+                        font.family: Config.font
+                        font.pixelSize: Config.iconSize
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                    Text {
+                        text: "Wallpaper & Theme"
+                        color: Theme.fg
+                        font.family: Config.font
+                        font.pixelSize: 12
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                }
+
+                MouseArea {
+                    id: wpHover
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    onClicked: Panels.openWallpaper()
+                }
+            }
         }
     }
 }
