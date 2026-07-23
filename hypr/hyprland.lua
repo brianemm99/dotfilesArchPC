@@ -23,7 +23,7 @@
 
 -- See https://wiki.hypr.land/Configuring/Basics/Monitors/
 hl.monitor({
-    output   = "DP-3",              
+    output   = "DP-3",
     mode     = "3440x1440@60",
     position = "0x0",
     scale    = 1,
@@ -254,6 +254,7 @@ hl.config({
         kb_rules   = "",
 
         follow_mouse = 1,
+        numlock_by_default = true,
 
         sensitivity = 0, -- -1.0 - 1.0, 0 means no modification.
 
