@@ -38,8 +38,6 @@ Variants {
                 width: clock.width
                 height: bar.full ? clock.expandedDrop : 0
             }
-            // Pin-only tabs: armed only while open — no dead strips,
-            // no hover transit-flash.
             Region {
                 x: Math.round(power.x)
                 y: Config.barHeight
@@ -94,7 +92,7 @@ Variants {
             y: (Config.barHeight - height) / 2
         }
 
-        // ── RIGHT ──
+        // ── RIGHT (full bar) ──
         Tray {
             id: tray
             visible: bar.full
@@ -116,6 +114,14 @@ Variants {
             AudioModule {}
             BellModule {}
             GearModule {}
+        }
+
+        // ── RIGHT (lean bar): volume only ──
+        AudioModule {
+            visible: !bar.full
+            anchors.right: parent.right
+            anchors.rightMargin: Theme.gap
+            y: 0
         }
     }
 }

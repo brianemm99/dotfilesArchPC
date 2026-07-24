@@ -15,7 +15,7 @@ eval "$(starship init bash)"
 
 alias k='kubectl'
 
-source /etc/bash_completion # not needed on macos
+[[ -r /usr/share/bash-completion/bash_completion ]] && . /usr/share/bash-completion/bash_completion
 
 source <(kubectl completion bash)
 
