@@ -30,11 +30,11 @@ hl.monitor({
 })
 
 hl.monitor({
-    output    = "HDMI-A-1",            
+    output    = "HDMI-A-1",
     mode      = "2560x1440@144",
-    position  = "3440x0",         
+    position  = "3440x0",
     scale     = 1.6,
-    transform = 3,               
+    transform = 3,
 })
 
 ---------------------
@@ -56,7 +56,7 @@ local power       = "quickshell:powermenu"
 -- Autostart necessary processes (like notifications daemons, status bars, etc.)
 -- Or execute your favorite apps at launch like this:
 --
-hl.on("hyprland.start", function () 
+hl.on("hyprland.start", function ()
   hl.exec_cmd("qs")
   hl.exec_cmd("hyprpaper")
   hl.exec_cmd("sh -c 'sleep 0.8; ~/.local/bin/wallpaper-restore'")
@@ -118,8 +118,8 @@ end
 
 hl.config({
     general = {
-        gaps_in  = 3,
-        gaps_out = 7,
+        gaps_in  = 2,
+        gaps_out = 5,
 
         border_size = 2,
 
@@ -135,8 +135,8 @@ hl.config({
     },
 
     decoration = {
-        rounding       = 9,
-        rounding_power = 2,
+        rounding       = 8,
+        rounding_power = 3,
 
         -- Change transparency of focused and unfocused windows
         active_opacity   = 0.97,
@@ -170,25 +170,25 @@ hl.curve("almostLinear",   { type = "bezier", points = { {0.5, 0.5},   {0.75, 1}
 hl.curve("quick",          { type = "bezier", points = { {0.15, 0},    {0.1, 1}     } })
 
 -- Default springs
-hl.curve("easy",           { type = "spring", mass = 1, stiffness = 71.2633, dampening = 15.8273644 })
+hl.curve("easy",           { type = "spring", mass = 1, stiffness = 238.1191, dampening = 24.21279333 })
 
-hl.animation({ leaf = "global",        enabled = true,  speed = 10,   bezier = "default" })
-hl.animation({ leaf = "border",        enabled = true,  speed = 5.39, bezier = "easeOutQuint" })
-hl.animation({ leaf = "windows",       enabled = true,  speed = 4.79, spring = "easy" })
-hl.animation({ leaf = "windowsIn",     enabled = true,  speed = 4.1,  spring = "easy",         style = "popin 87%" })
-hl.animation({ leaf = "windowsOut",    enabled = true,  speed = 1.49, bezier = "linear",       style = "popin 87%" })
-hl.animation({ leaf = "fadeIn",        enabled = true,  speed = 1.73, bezier = "almostLinear" })
-hl.animation({ leaf = "fadeOut",       enabled = true,  speed = 1.46, bezier = "almostLinear" })
-hl.animation({ leaf = "fade",          enabled = true,  speed = 3.03, bezier = "quick" })
-hl.animation({ leaf = "layers",        enabled = true,  speed = 3.81, bezier = "easeOutQuint" })
-hl.animation({ leaf = "layersIn",      enabled = true,  speed = 4,    bezier = "easeOutQuint", style = "fade" })
-hl.animation({ leaf = "layersOut",     enabled = true,  speed = 1.5,  bezier = "linear",       style = "fade" })
-hl.animation({ leaf = "fadeLayersIn",  enabled = true,  speed = 1.79, bezier = "almostLinear" })
-hl.animation({ leaf = "fadeLayersOut", enabled = true,  speed = 1.39, bezier = "almostLinear" })
-hl.animation({ leaf = "workspaces",    enabled = true,  speed = 1.94, bezier = "almostLinear", style = "fade" })
-hl.animation({ leaf = "workspacesIn",  enabled = true,  speed = 1.21, bezier = "almostLinear", style = "fade" })
-hl.animation({ leaf = "workspacesOut", enabled = true,  speed = 1.94, bezier = "almostLinear", style = "fade" })
-hl.animation({ leaf = "zoomFactor",    enabled = true,  speed = 7,    bezier = "quick" })
+hl.animation({ leaf = "global",        enabled = true, speed = 10,  bezier = "default" })
+hl.animation({ leaf = "border",        enabled = true, speed = 3.5, bezier = "easeOutQuint" })
+hl.animation({ leaf = "windows",       enabled = true, speed = 3.2, spring = "easy" })
+hl.animation({ leaf = "windowsIn",     enabled = true, speed = 2.8, spring = "easy",         style = "popin 87%" })
+hl.animation({ leaf = "windowsOut",    enabled = true, speed = 1.2, bezier = "linear",       style = "popin 87%" })
+hl.animation({ leaf = "fadeIn",        enabled = true, speed = 1.2, bezier = "almostLinear" })
+hl.animation({ leaf = "fadeOut",       enabled = true, speed = 1.0, bezier = "almostLinear" })
+hl.animation({ leaf = "fade",          enabled = true, speed = 2.0, bezier = "quick" })
+hl.animation({ leaf = "layers",        enabled = true, speed = 2.5, bezier = "easeOutQuint" })
+hl.animation({ leaf = "layersIn",      enabled = true, speed = 2.5, bezier = "easeOutQuint", style = "fade" })
+hl.animation({ leaf = "layersOut",     enabled = true, speed = 1.2, bezier = "linear",       style = "fade" })
+hl.animation({ leaf = "fadeLayersIn",  enabled = true, speed = 1.2, bezier = "almostLinear" })
+hl.animation({ leaf = "fadeLayersOut", enabled = true, speed = 1.0, bezier = "almostLinear" })
+hl.animation({ leaf = "workspaces",    enabled = true, speed = 1.4, bezier = "almostLinear", style = "fade" })
+hl.animation({ leaf = "workspacesIn",  enabled = true, speed = 1.0, bezier = "almostLinear", style = "fade" })
+hl.animation({ leaf = "workspacesOut", enabled = true, speed = 1.4, bezier = "almostLinear", style = "fade" })
+hl.animation({ leaf = "zoomFactor",    enabled = true, speed = 5,   bezier = "quick" })
 
 -- Ref https://wiki.hypr.land/Configuring/Basics/Workspace-Rules/
 -- "Smart gaps" / "No gaps when only"
@@ -403,3 +403,7 @@ hl.window_rule({
     move  = "20 monitor_h-120",
     float = true,
 })
+
+-- Set second monitor to workspaces 5-6
+hl.workspace_rule({ workspace = "5", monitor = "HDMI-A-1", default = true, persistent = true })
+hl.workspace_rule({ workspace = "6", monitor = "HDMI-A-1", persistent = true })
