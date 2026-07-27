@@ -6,12 +6,11 @@ import QtQuick
 Singleton {
     id: root
 
+    // ── settings panel ──
     property bool pinned: false
     property bool gearHover: false
     property bool panelHover: false
-
     property bool settingsOpen: false
-    property bool wallpaperOpen: false
 
     readonly property bool wantOpen: pinned || gearHover || panelHover
     onWantOpenChanged: {
@@ -25,18 +24,36 @@ Singleton {
         settingsOpen = false;
     }
 
-    function openWallpaper() {
-        closeSettings();
-        Notifs.panelOpen = false;
-        wallpaperOpen = true;
-    }
-
     Timer {
         id: closeTimer
         interval: 350
         onTriggered: root.settingsOpen = false
     }
 
+    // ── wallpaper picker ──
+    property bool wallpaperOpen: false
+
+    function openWallpaper() {
+        closeSettings();
+        Notifs.panelOpen = false;
+        wallpaperOpen = true;
+    }
+
+    // ── system monitor panel (hover intent both ways) ──
+    property bool sysmonRingsHover: false
+    property bool sysmonPanelHover: false
+    property bool sysmonOpen: false
+
+    readonly property bool sysmonWant: sysmonRingsHover || sysmonPanelHover
+    onSysmonWantChanged: {
+        if (sysmonWant) { sysmonClose.stop(); sysmonOpenT.restart(); }
+        else { sysmonOpenT.stop(); sysmonClose.restart(); }
+    }
+
+    Timer { id: sysmonOpenT; interval: 200; onTriggered: root.sysmonOpen = true }
+    Timer { id: sysmonClose; interval: 300; onTriggered: root.sysmonOpen = false }
+
+    // ── global dismiss ──
     signal dismissAll()
 
     GlobalShortcut {
@@ -44,9 +61,10 @@ Singleton {
         name: "dismiss"
         onPressed: {
             root.closeSettings();
+            root.sysmonOpen = false;
             Notifs.panelOpen = false;
             Notifs.clearToasts();
-            root.dismissAll();      // tabs, launcher, wallpaper picker listen
+            root.dismissAll();
         }
     }
 }

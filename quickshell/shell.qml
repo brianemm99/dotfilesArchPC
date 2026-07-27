@@ -7,4 +7,5 @@ ShellRoot {
     Launcher {}
     ToastStack {}
     WallpaperPicker {}
+    SysMonPanel {}
 }

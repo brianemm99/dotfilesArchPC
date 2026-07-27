@@ -1,0 +1,37 @@
+#!/bin/sh
+# one sample: cpu jiffies, memory bytes, gpu busy + vram, cpu temp, load
+
+awk '/^cpu /{total=$2+$3+$4+$5+$6+$7+$8+$9; idle=$5+$6;
+     print "cpu", total-idle, total; exit}' /proc/stat
+
+awk '/^MemTotal:/{t=$2} /^MemAvailable:/{a=$2}
+     END{print "mem", (t-a)*1024, t*1024}' /proc/meminfo
+
+# discrete GPU = the DRM device reporting the most VRAM
+best=""; bestvram=0
+for d in /sys/class/drm/card*/device; do
+    [ -r "$d/gpu_busy_percent" ] || continue
+    v=0
+    [ -r "$d/mem_info_vram_total" ] && v=$(cat "$d/mem_info_vram_total" 2>/dev/null)
+    case "$v" in ''|*[!0-9]*) v=0 ;; esac
+    if [ "$v" -gt "$bestvram" ]; then bestvram=$v; best=$d; fi
+done
+if [ -n "$best" ]; then
+    busy=$(cat "$best/gpu_busy_percent" 2>/dev/null)
+    case "$busy" in ''|*[!0-9]*) busy=0 ;; esac
+    used=0
+    [ -r "$best/mem_info_vram_used" ] && used=$(cat "$best/mem_info_vram_used" 2>/dev/null)
+    case "$used" in ''|*[!0-9]*) used=0 ;; esac
+    echo "gpu $busy $used $bestvram"
+fi
+
+for h in /sys/class/hwmon/hwmon*; do
+    [ -r "$h/name" ] || continue
+    n=$(cat "$h/name" 2>/dev/null)
+    if [ "$n" = "k10temp" ] || [ "$n" = "coretemp" ]; then
+        [ -r "$h/temp1_input" ] && echo "temp $(cat "$h/temp1_input")"
+        break
+    fi
+done
+
+awk -v c="$(nproc)" '{print "load", $1, c}' /proc/loadavg

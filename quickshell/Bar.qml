@@ -57,7 +57,7 @@ Variants {
             tabs: bar.full ? [clock, power, media] : []
         }
 
-        // ── LEFT ──
+        // ── LEFT: power · sysmon rings · workspaces ──
         PowerButton {
             id: power
             visible: bar.full
@@ -65,10 +65,18 @@ Variants {
             anchors.leftMargin: Theme.gap
             y: 0
         }
+        SysMonModule {
+            id: sysmon
+            visible: bar.full
+            anchors.left: power.right
+            anchors.leftMargin: Theme.gap * 2
+            y: 0
+            height: Config.barHeight
+        }
         Workspaces {
             screen: bar.modelData
-            anchors.left: bar.full ? power.right : parent.left
-            anchors.leftMargin: Theme.gap
+            anchors.left: bar.full ? sysmon.right : parent.left
+            anchors.leftMargin: bar.full ? Theme.gap * 2 : Theme.gap
             y: (Config.barHeight - height) / 2
         }
 
@@ -116,7 +124,7 @@ Variants {
             GearModule {}
         }
 
-        // ── RIGHT (lean bar): volume only ──
+        // ── RIGHT (lean bar) ──
         AudioModule {
             visible: !bar.full
             anchors.right: parent.right
