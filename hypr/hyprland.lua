@@ -59,6 +59,7 @@ local power       = "quickshell:powermenu"
 hl.on("hyprland.start", function ()
   hl.exec_cmd("qs")
   hl.exec_cmd("hyprpaper")
+  hl.exec_cmd("hyprsunset")
   hl.exec_cmd("sh -c 'sleep 0.8; ~/.local/bin/wallpaper-restore'")
 end)
 
