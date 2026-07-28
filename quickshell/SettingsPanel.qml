@@ -33,7 +33,7 @@ PanelWindow {
     readonly property real fil: Config.tabFillet
 
     implicitWidth: 340
-    implicitHeight: 300 + fil * 2
+    implicitHeight: 352 + fil * 2
     color: "transparent"
 
     HoverHandler {
@@ -100,6 +100,47 @@ PanelWindow {
             font.pixelSize: Config.iconSize + 2
         }
         MouseArea { anchors.fill: parent; onClicked: parent.toggled() }
+    }
+
+    component WideButton: Rectangle {
+        property string icon
+        property string label
+        property bool accent: false
+        signal activated()
+
+        width: parent.width
+        height: 36
+        radius: height / 2
+        color: accent
+            ? (wbHover.containsMouse ? Qt.lighter(Theme.primary, 1.1) : Theme.primary)
+            : (wbHover.containsMouse ? Qt.lighter(Theme.surfaceHigh, 1.25) : Theme.surfaceHigh)
+        Behavior on color { ColorAnimation { duration: 90 } }
+
+        Row {
+            anchors.centerIn: parent
+            spacing: 8
+            Text {
+                text: parent.parent.icon
+                color: parent.parent.accent ? Theme.surface : Theme.fg
+                font.family: Config.font
+                font.pixelSize: Config.iconSize
+                anchors.verticalCenter: parent.verticalCenter
+            }
+            Text {
+                text: parent.parent.label
+                color: parent.parent.accent ? Theme.surface : Theme.fg
+                font.family: Config.font
+                font.pixelSize: 12
+                anchors.verticalCenter: parent.verticalCenter
+            }
+        }
+
+        MouseArea {
+            id: wbHover
+            anchors.fill: parent
+            hoverEnabled: true
+            onClicked: parent.activated()
+        }
     }
 
     component MixRow: Item {
@@ -237,40 +278,22 @@ PanelWindow {
 
             Item { width: 1; height: 2 }
 
-            // ── Wallpaper & Theme → picker ──
-            Rectangle {
-                width: parent.width
-                height: 36
-                radius: height / 2
-                color: wpHover.containsMouse
-                    ? Qt.lighter(Theme.surfaceHigh, 1.25) : Theme.surfaceHigh
-                Behavior on color { ColorAnimation { duration: 90 } }
+            // ── night light: auto → warm → off ──
+            WideButton {
+                icon: Sunset.mode === "warm" ? "󰛨"
+                    : Sunset.mode === "off"  ? "󰃝" : "󰥔"
+                label: !Sunset.running ? "Night light (not running)"
+                    : Sunset.mode === "warm" ? "Night light: warm"
+                    : Sunset.mode === "off"  ? "Night light: off"
+                    : "Night light: auto"
+                accent: Sunset.mode === "warm"
+                onActivated: Sunset.cycle()
+            }
 
-                Row {
-                    anchors.centerIn: parent
-                    spacing: 8
-                    Text {
-                        text: "󰸉"
-                        color: Theme.fg
-                        font.family: Config.font
-                        font.pixelSize: Config.iconSize
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                    Text {
-                        text: "Wallpaper & Theme"
-                        color: Theme.fg
-                        font.family: Config.font
-                        font.pixelSize: 12
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                }
-
-                MouseArea {
-                    id: wpHover
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    onClicked: Panels.openWallpaper()
-                }
+            WideButton {
+                icon: "󰸉"
+                label: "Wallpaper & Theme"
+                onActivated: Panels.openWallpaper()
             }
         }
     }

@@ -1,3 +1,4 @@
 singleton Notifs Notifs.qml
 singleton Panels Panels.qml
 singleton SysMon SysMon.qml
+singleton Sunset Sunset.qml
