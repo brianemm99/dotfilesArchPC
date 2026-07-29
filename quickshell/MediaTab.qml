@@ -10,25 +10,61 @@ TabSlot {
 
     // ── THE KNOBS ──
     tabWidth: 430
-    readonly property real artSize: 140
+    readonly property real artSize: 170
     readonly property real seekH:   20
+    // fixed so art can grow without dragging the transport with it
+    readonly property real playSize: 64
+    readonly property real skipSize: 48
+    readonly property real ctlGap:   18
+    readonly property real ctlBottomMargin: 38
 
     readonly property real pad: 16
     expandedDrop: pad + artSize + 12 + seekH + pad
     hoverOpens: false
     onBarClicked: pinned = !pinned
+    // manual source choice lasts only while the panel is open
+    onPinnedChanged: if (!pinned) forcedSource = ""
 
-    // ── sticky player selection (Brave-pause bug fix — keep) ──
+    // ── players ──
+    // Bus names on this system:
+    //   org.mpris.MediaPlayer2.spotify
+    //   org.mpris.MediaPlayer2.brave.instanceNNNN
+    // playerctld is a PROXY that mirrors other players — exclude it or the
+    // panel can bind to the mirror instead of the real player.
+    function srcOf(p) {
+        const s = String(p?.dbusName ?? "").toLowerCase();
+        if (s.includes("playerctld")) return "proxy";
+        if (s.includes("spotify")) return "spotify";
+        if (s.includes("brave")) return "browser";
+        return "other";
+    }
+
+    readonly property var realPlayers:
+        Mpris.players.values.filter(p => root.srcOf(p) !== "proxy")
+
+    readonly property var spotifyPlayer:
+        realPlayers.find(p => root.srcOf(p) === "spotify") ?? null
+    readonly property var browserPlayer:
+        realPlayers.find(p => root.srcOf(p) === "browser") ?? null
+
+    // "" = auto (sticky); set by the source pills
+    property string forcedSource: ""
+
     property var stickyPlayer: null
     readonly property var playingPlayer:
-        Mpris.players.values.find(p => p.isPlaying) ?? null
+        realPlayers.find(p => p.isPlaying) ?? null
     onPlayingPlayerChanged: if (playingPlayer) stickyPlayer = playingPlayer
 
-    readonly property var player: playingPlayer
-        ?? ((stickyPlayer && Mpris.players.values.includes(stickyPlayer))
-                ? stickyPlayer : null)
-        ?? Mpris.players.values.find(p => (p.trackTitle ?? "") !== "")
-        ?? Mpris.players.values[0] ?? null
+    readonly property var player: {
+        if (forcedSource === "spotify" && spotifyPlayer) return spotifyPlayer;
+        if (forcedSource === "browser" && browserPlayer) return browserPlayer;
+        if (playingPlayer) return playingPlayer;
+        if (stickyPlayer && realPlayers.includes(stickyPlayer)) return stickyPlayer;
+        return realPlayers.find(p => (p.trackTitle ?? "") !== "")
+            ?? realPlayers[0] ?? null;
+    }
+
+    readonly property string activeSource: srcOf(player)
 
     visible: player !== null
 
@@ -53,7 +89,6 @@ TabSlot {
         return `${m}:${r < 10 ? "0" : ""}${r}`;
     }
 
-    // ── circular control button: the disc IS the click target ──
     component ControlButton: Rectangle {
         id: btn
         property string glyph
@@ -62,9 +97,7 @@ TabSlot {
 
         radius: width / 2
         color: btnHover.containsMouse
-            ? (btnHover.pressedButtons ? Qt.darker(Theme.surfaceHigh, 1.15)
-                                       : Qt.lighter(Theme.surfaceHigh, 1.25))
-            : Theme.surfaceHigh
+            ? Qt.lighter(Theme.surfaceHigh, 1.25) : Theme.surfaceHigh
         Behavior on color { ColorAnimation { duration: 90 } }
 
         Text {
@@ -83,7 +116,56 @@ TabSlot {
         }
     }
 
-    // ── in-bar face: art thumb + marquee ──
+    component SourcePill: Rectangle {
+        id: pill
+        property string glyph
+        property string label
+        property bool active: false
+        property bool available: true
+        signal picked()
+
+        width: pillRow.implicitWidth + 20
+        height: 26
+        radius: height / 2
+        color: !available ? "transparent"
+             : active ? Theme.primary
+             : pillHover.containsMouse ? Qt.lighter(Theme.surfaceHigh, 1.25)
+             : Theme.surfaceHigh
+        border.width: available ? 0 : 1
+        border.color: Theme.surfaceHigh
+        opacity: available ? 1 : 0.45
+        Behavior on color { ColorAnimation { duration: 90 } }
+
+        Row {
+            id: pillRow
+            anchors.centerIn: parent
+            spacing: 6
+            Text {
+                text: pill.glyph
+                color: pill.active ? Theme.surface : Theme.fg
+                font.family: Config.font
+                font.pixelSize: 13
+                anchors.verticalCenter: parent.verticalCenter
+            }
+            Text {
+                text: pill.label
+                color: pill.active ? Theme.surface : Theme.fgMuted
+                font.family: Config.font
+                font.pixelSize: 11
+                anchors.verticalCenter: parent.verticalCenter
+            }
+        }
+
+        MouseArea {
+            id: pillHover
+            anchors.fill: parent
+            hoverEnabled: pill.available
+            enabled: pill.available
+            onClicked: pill.picked()
+        }
+    }
+
+    // ── in-bar face ──
     Row {
         x: 12
         height: Config.barHeight
@@ -175,42 +257,65 @@ TabSlot {
             }
         }
 
-        // controls — three discs, centered in the zone right of the art
         Item {
+            id: transport
             anchors.left: art.right
             anchors.right: parent.right
-            anchors.top: art.top
-            height: art.height
+            anchors.bottom: art.bottom
+            anchors.bottomMargin: root.ctlBottomMargin
+            height: root.playSize
 
             Row {
                 anchors.centerIn: parent
-                spacing: root.artSize * 0.13
+                spacing: root.ctlGap
 
                 ControlButton {
-                    width: root.artSize * 0.34; height: width
+                    width: root.skipSize; height: width
                     anchors.verticalCenter: parent.verticalCenter
                     glyph: "󰒮"
-                    glyphSize: root.artSize * 0.15
+                    glyphSize: 21
                     onPressed: root.player?.previous()
                 }
                 ControlButton {
-                    width: root.artSize * 0.46; height: width
+                    width: root.playSize; height: width
                     anchors.verticalCenter: parent.verticalCenter
                     glyph: root.player?.isPlaying ? "󰏤" : "󰐊"
-                    glyphSize: root.artSize * 0.21
+                    glyphSize: 29
                     onPressed: root.player?.togglePlaying()
                 }
                 ControlButton {
-                    width: root.artSize * 0.34; height: width
+                    width: root.skipSize; height: width
                     anchors.verticalCenter: parent.verticalCenter
                     glyph: "󰒭"
-                    glyphSize: root.artSize * 0.15
+                    glyphSize: 21
                     onPressed: root.player?.next()
                 }
             }
         }
 
-        // ── bottom row: elapsed · seek · total ──
+        Row {
+            anchors.horizontalCenter: transport.horizontalCenter
+            anchors.bottom: transport.top
+            anchors.bottomMargin: 10
+            spacing: 8
+
+            SourcePill {
+                glyph: ""
+                label: "Spotify"
+                available: root.spotifyPlayer !== null
+                active: root.activeSource === "spotify"
+                onPicked: root.forcedSource = "spotify"
+            }
+            SourcePill {
+                glyph: "󰖟"
+                label: "Browser"
+                available: root.browserPlayer !== null
+                active: root.activeSource === "browser"
+                onPicked: root.forcedSource = "browser"
+            }
+        }
+
+        // ── elapsed · seek · total ──
         Text {
             id: tElapsed
             anchors.left: parent.left
