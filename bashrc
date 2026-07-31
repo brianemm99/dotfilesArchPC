@@ -9,6 +9,10 @@ alias ls='ls --color=auto'
 alias grep='grep --color=auto'
 PS1='[\u@\h \W]\$ '
 
+# nvim as default EDITOR
+export EDITOR="nvim"
+export VISUAL="nvim"
+
 eval "$(starship init bash)"
 
 # kubectl completion

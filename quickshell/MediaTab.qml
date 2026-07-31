@@ -4,33 +4,30 @@ import Quickshell.Widgets
 import QtQuick
 import qs.Theme
 import qs.Config
+import qs.Services
 
 TabSlot {
     id: root
 
     // ── THE KNOBS ──
-    tabWidth: 430
-    readonly property real artSize: 170
-    readonly property real seekH:   20
-    // fixed so art can grow without dragging the transport with it
+    tabWidth: 516
+    readonly property real artSize: 180
+    readonly property real waveH:   60          // wave band height
+    readonly property real seekH:   24
     readonly property real playSize: 64
     readonly property real skipSize: 48
     readonly property real ctlGap:   18
-    readonly property real ctlBottomMargin: 38
+    readonly property real ctlBottomMargin: 26  // lifts transport + pills
 
-    readonly property real pad: 16
-    expandedDrop: pad + artSize + 12 + seekH + pad
+    readonly property real pad: 19
+    expandedDrop: pad + artSize + 14 + waveH + pad
     hoverOpens: false
     onBarClicked: pinned = !pinned
-    // manual source choice lasts only while the panel is open
-    onPinnedChanged: if (!pinned) forcedSource = ""
+    onPinnedChanged: {
+        if (!pinned) forcedSource = "";
+        Visualizer.active = pinned;             // cava runs only while open
+    }
 
-    // ── players ──
-    // Bus names on this system:
-    //   org.mpris.MediaPlayer2.spotify
-    //   org.mpris.MediaPlayer2.brave.instanceNNNN
-    // playerctld is a PROXY that mirrors other players — exclude it or the
-    // panel can bind to the mirror instead of the real player.
     function srcOf(p) {
         const s = String(p?.dbusName ?? "").toLowerCase();
         if (s.includes("playerctld")) return "proxy";
@@ -47,7 +44,6 @@ TabSlot {
     readonly property var browserPlayer:
         realPlayers.find(p => root.srcOf(p) === "browser") ?? null
 
-    // "" = auto (sticky); set by the source pills
     property string forcedSource: ""
 
     property var stickyPlayer: null
@@ -118,7 +114,7 @@ TabSlot {
 
     component SourcePill: Rectangle {
         id: pill
-        property string glyph
+        property string glyph: ""
         property string label
         property bool active: false
         property bool available: true
@@ -139,8 +135,10 @@ TabSlot {
         Row {
             id: pillRow
             anchors.centerIn: parent
-            spacing: 6
+            spacing: pill.glyph === "" ? 0 : 6
             Text {
+                visible: pill.glyph !== ""
+                width: visible ? implicitWidth : 0
                 text: pill.glyph
                 color: pill.active ? Theme.surface : Theme.fg
                 font.family: Config.font
@@ -233,7 +231,7 @@ TabSlot {
             id: art
             anchors.left: parent.left
             anchors.top: parent.top
-            width: root.artSize; height: root.artSize; radius: 10
+            width: root.artSize; height: root.artSize; radius: 12
             color: "transparent"
 
             Rectangle {
@@ -296,7 +294,7 @@ TabSlot {
         Row {
             anchors.horizontalCenter: transport.horizontalCenter
             anchors.bottom: transport.top
-            anchors.bottomMargin: 10
+            anchors.bottomMargin: 12
             spacing: 8
 
             SourcePill {
@@ -307,7 +305,6 @@ TabSlot {
                 onPicked: root.forcedSource = "spotify"
             }
             SourcePill {
-                glyph: "󰖟"
                 label: "Browser"
                 available: root.browserPlayer !== null
                 active: root.activeSource === "browser"
@@ -315,7 +312,18 @@ TabSlot {
             }
         }
 
-        // ── elapsed · seek · total ──
+        // ── wave band: spans the panel's lower area ──
+        Wave {
+            id: wave
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            height: root.waveH
+            values: Visualizer.values
+            visible: root.reveal > 0.05
+        }
+
+        // ── seek + timestamps, floating on the wave ──
         Text {
             id: tElapsed
             anchors.left: parent.left
@@ -323,7 +331,7 @@ TabSlot {
             text: root.fmtTime(seekArea.pressed ? seekArea.dragFrac * root.len : root.posS)
             color: Theme.fgMuted
             font.family: Config.font
-            font.pixelSize: 10
+            font.pixelSize: 11
         }
         Text {
             id: tTotal
@@ -332,16 +340,16 @@ TabSlot {
             text: root.fmtTime(root.len)
             color: Theme.fgMuted
             font.family: Config.font
-            font.pixelSize: 10
+            font.pixelSize: 11
         }
 
         Item {
             id: seek
             anchors.left: tElapsed.right
             anchors.right: tTotal.left
-            anchors.leftMargin: 10
-            anchors.rightMargin: 10
-            anchors.bottom: parent.bottom
+            anchors.leftMargin: 12
+            anchors.rightMargin: 12
+            anchors.verticalCenter: wave.verticalCenter
             height: root.seekH
 
             readonly property bool live: seekArea.containsMouse || seekArea.pressed

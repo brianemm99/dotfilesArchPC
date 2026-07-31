@@ -44,6 +44,7 @@ hl.monitor({
 -- Set programs that you use
 local terminal    = "ghostty"
 local fileManager = "ghostty -e yazi"
+local nwManager   = "ghostty -e iwctl"
 local menu        = "quickshell:launcher"
 local power       = "quickshell:powermenu"
 
