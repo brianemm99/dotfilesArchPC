@@ -12,20 +12,22 @@ TabSlot {
     // ── THE KNOBS ──
     tabWidth: 516
     readonly property real artSize: 180
-    readonly property real waveH:   60          // wave band height
+    readonly property real waveH:   64          // own band, above the scrub bar
+    readonly property real waveGap: 10          // wave → scrub spacing
     readonly property real seekH:   24
     readonly property real playSize: 64
     readonly property real skipSize: 48
     readonly property real ctlGap:   18
-    readonly property real ctlBottomMargin: 26  // lifts transport + pills
+    readonly property real ctlBottomMargin: 26
 
     readonly property real pad: 19
-    expandedDrop: pad + artSize + 14 + waveH + pad
+    // panel is taller now: art block, then wave, then seek
+    expandedDrop: pad + artSize + 14 + waveH + waveGap + seekH + pad
     hoverOpens: false
     onBarClicked: pinned = !pinned
     onPinnedChanged: {
         if (!pinned) forcedSource = "";
-        Visualizer.active = pinned;             // cava runs only while open
+        Visualizer.active = pinned;
     }
 
     function srcOf(p) {
@@ -312,84 +314,93 @@ TabSlot {
             }
         }
 
-        // ── wave band: spans the panel's lower area ──
+        // ── wave: its own band, directly above the scrub row ──
         Wave {
             id: wave
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.bottom: parent.bottom
+            anchors.bottom: seekRow.top
+            anchors.bottomMargin: root.waveGap
             height: root.waveH
             values: Visualizer.values
             visible: root.reveal > 0.05
         }
 
-        // ── seek + timestamps, floating on the wave ──
-        Text {
-            id: tElapsed
-            anchors.left: parent.left
-            anchors.verticalCenter: seek.verticalCenter
-            text: root.fmtTime(seekArea.pressed ? seekArea.dragFrac * root.len : root.posS)
-            color: Theme.fgMuted
-            font.family: Config.font
-            font.pixelSize: 11
-        }
-        Text {
-            id: tTotal
-            anchors.right: parent.right
-            anchors.verticalCenter: seek.verticalCenter
-            text: root.fmtTime(root.len)
-            color: Theme.fgMuted
-            font.family: Config.font
-            font.pixelSize: 11
-        }
-
+        // ── seek + timestamps, clean background ──
         Item {
-            id: seek
-            anchors.left: tElapsed.right
-            anchors.right: tTotal.left
-            anchors.leftMargin: 12
-            anchors.rightMargin: 12
-            anchors.verticalCenter: wave.verticalCenter
+            id: seekRow
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
             height: root.seekH
 
-            readonly property bool live: seekArea.containsMouse || seekArea.pressed
-            readonly property real trackH: live ? 7 : 5
-
-            Rectangle {
+            Text {
+                id: tElapsed
+                anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
-                width: parent.width; height: seek.trackH; radius: height / 2
-                color: Theme.surfaceHigh
-                Behavior on height { NumberAnimation { duration: 100 } }
+                text: root.fmtTime(seekArea.pressed ? seekArea.dragFrac * root.len : root.posS)
+                color: Theme.fgMuted
+                font.family: Config.font
+                font.pixelSize: 11
             }
-            Rectangle {
+            Text {
+                id: tTotal
+                anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                width: parent.width * root.frac; height: seek.trackH; radius: height / 2
-                color: Theme.primary
-                Behavior on height { NumberAnimation { duration: 100 } }
-            }
-            Rectangle {
-                anchors.verticalCenter: parent.verticalCenter
-                x: Math.max(0, Math.min(parent.width - width, parent.width * root.frac - width / 2))
-                width: 13; height: 13; radius: 6.5
-                color: Theme.fg
-                opacity: seek.live ? 1 : 0
-                Behavior on opacity { NumberAnimation { duration: 100 } }
+                text: root.fmtTime(root.len)
+                color: Theme.fgMuted
+                font.family: Config.font
+                font.pixelSize: 11
             }
 
-            MouseArea {
-                id: seekArea
-                anchors.fill: parent
-                hoverEnabled: true
-                property real dragFrac: 0
-                function fracAt(mx) {
-                    return Math.max(0, Math.min(1, mx / width));
+            Item {
+                id: seek
+                anchors.left: tElapsed.right
+                anchors.right: tTotal.left
+                anchors.leftMargin: 12
+                anchors.rightMargin: 12
+                anchors.verticalCenter: parent.verticalCenter
+                height: parent.height
+
+                readonly property bool live: seekArea.containsMouse || seekArea.pressed
+                readonly property real trackH: live ? 7 : 5
+
+                Rectangle {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: parent.width; height: seek.trackH; radius: height / 2
+                    color: Theme.surfaceHigh
+                    Behavior on height { NumberAnimation { duration: 100 } }
                 }
-                onPressed: (m) => dragFrac = fracAt(m.x)
-                onPositionChanged: (m) => { if (pressed) dragFrac = fracAt(m.x) }
-                onReleased: {
-                    if (root.player && root.len > 0 && (root.player.canSeek ?? true)) {
-                        root.player.position = dragFrac * root.len;
-                        root.posS = dragFrac * root.len;
+                Rectangle {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: parent.width * root.frac; height: seek.trackH; radius: height / 2
+                    color: Theme.primary
+                    Behavior on height { NumberAnimation { duration: 100 } }
+                }
+                Rectangle {
+                    anchors.verticalCenter: parent.verticalCenter
+                    x: Math.max(0, Math.min(parent.width - width, parent.width * root.frac - width / 2))
+                    width: 13; height: 13; radius: 6.5
+                    color: Theme.fg
+                    opacity: seek.live ? 1 : 0
+                    Behavior on opacity { NumberAnimation { duration: 100 } }
+                }
+
+                MouseArea {
+                    id: seekArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    property real dragFrac: 0
+                    function fracAt(mx) {
+                        return Math.max(0, Math.min(1, mx / width));
+                    }
+                    onPressed: (m) => dragFrac = fracAt(m.x)
+                    onPositionChanged: (m) => { if (pressed) dragFrac = fracAt(m.x) }
+                    onReleased: {
+                        if (root.player && root.len > 0 && (root.player.canSeek ?? true)) {
+                            root.player.position = dragFrac * root.len;
+                            root.posS = dragFrac * root.len;
+                        }
                     }
                 }
             }
