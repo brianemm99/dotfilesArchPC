@@ -47,6 +47,7 @@ local fileManager = "ghostty -e yazi"
 local nwManager   = "ghostty -e iwctl"
 local menu        = "quickshell:launcher"
 local power       = "quickshell:powermenu"
+local browser     = "brave --password-store=basic"
 
 -------------------
 ---- AUTOSTART ----
@@ -298,7 +299,7 @@ hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(menu))
 hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
 hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"))    -- dwindle only
-hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("brave --password-store=basic"))
+hl.bind(mainMod .. " + B", hl.dsp.exec_cmd(browser))
 
 -- Move Windows within the same workspace with mainMod + Control
 hl.bind(mainMod .. " + CONTROL + left",  hl.dsp.window.move({ direction = "left" }))
