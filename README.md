@@ -1,5 +1,5 @@
 ### Will get to this
-
+### Work in Progress...
 *monitor sizes currently hardcoded*
 
 1)  Terminal: ghostty
