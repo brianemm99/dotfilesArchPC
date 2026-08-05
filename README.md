@@ -13,4 +13,3 @@
 9) Browser: Brave
 10) Mulitplexer: tmux
 11) Editor:  neovim
-12) Firewall: ufw
