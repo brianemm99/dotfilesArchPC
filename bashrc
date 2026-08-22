@@ -25,4 +25,9 @@ source <(kubectl completion bash)
 
 complete -o default -F __start_kubectl k
 
+# k3s kubeconfig
+export KUBECONFIG=~/.kube/k3s.yaml
 
+# devsy dev containers
+alias dws="devsy workspace"
+source <(devsy completion bash)
