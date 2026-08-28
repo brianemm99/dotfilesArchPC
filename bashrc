@@ -1,7 +1,8 @@
 #
 # ~/.bashrc
 #
-
+set -o vi
+set show-mode-in-prompt on
 # If not running interactively, don't do anything
 [[ $- != *i* ]] && return
 
@@ -29,5 +30,7 @@ complete -o default -F __start_kubectl k
 export KUBECONFIG=~/.kube/k3s.yaml
 
 # devsy dev containers
-alias dws="devsy workspace"
 source <(devsy completion bash)
+dws() { devsy workspace "$@"; }
+
+export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
