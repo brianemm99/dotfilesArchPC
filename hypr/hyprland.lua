@@ -29,13 +29,13 @@ hl.monitor({
     scale    = 1,
 })
 
-hl.monitor({
-    output    = "HDMI-A-1",
-    mode      = "2560x1440@144",
-    position  = "3440x0",
-    scale     = 1.6,
-    transform = 3,
-})
+--hl.monitor({
+--    output    = "HDMI-A-1",
+--    mode      = "2560x1440@144",
+--    position  = "3440x0",
+--    scale     = 1.6,
+--    transform = 3,
+--})
 
 ---------------------
 ---- MY PROGRAMS ----
@@ -383,5 +383,5 @@ hl.window_rule({
 })
 
 -- Set second monitor to workspaces 5-6
-hl.workspace_rule({ workspace = "5", monitor = "HDMI-A-1", default = true, persistent = true })
-hl.workspace_rule({ workspace = "6", monitor = "HDMI-A-1", persistent = true })
+--hl.workspace_rule({ workspace = "5", monitor = "HDMI-A-1", default = true, persistent = true })
+--hl.workspace_rule({ workspace = "6", monitor = "HDMI-A-1", persistent = true })
