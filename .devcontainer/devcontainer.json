@@ -1,0 +1,39 @@
+{
+  "name": "dotfiles",
+  "build": { "dockerfile": "Dockerfile" },
+  "remoteUser": "vscode",
+
+  // Lets .chezmoi templates / scripts detect they're running in here
+  "containerEnv": {
+    "DOTFILES_DEVCONTAINER": "1",
+    "DOTFILES_URL": "https://github.com/brianemm99/dotfiles.git"
+  },
+
+  // Podman (Fedora Atomic): uncomment both
+  // "runArgs": ["--userns=keep-id", "--security-opt=label=disable"],
+  // "containerUser": "vscode",
+
+  "mounts": [
+    // Host ssh-agent, so dws's dotfiles clone and git push work
+    "source=/run/user/1000/ssh-agent.socket,target=/ssh-agent,type=bind",
+    // Read-only view of the Arch dotfiles you're importing (adjust source path)
+    // "source=${localEnv:HOME}/arch-dotfiles,target=/mnt/arch,type=bind,readonly"
+  ],
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "timonwong.shellcheck",
+        "mkhl.shfmt",
+        "theqtcompany.qt-qml"
+      ],
+      "settings": {
+        "files.associations": {
+          "*.sh.tmpl": "shellscript",
+          "*.qml.tmpl": "qml"
+        },
+        "qt-qml.qmlls.customExePath": "/usr/lib/qt6/bin/qmlls"
+      }
+    }
+  }
+}
