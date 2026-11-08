@@ -16,6 +16,9 @@ export VISUAL="nvim"
 
 eval "$(starship init bash)"
 
+# ssh-agent
+[ -z "$SSH_AUTH_SOCK" ] && export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
+
 # kubectl completion
 
 alias k='kubectl'
